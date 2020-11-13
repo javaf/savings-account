@@ -52,8 +52,9 @@ class SavingsAccount {
   // 2. Update pending preferred withdrawls.
   // 3. Wait until sufficient balance available.
   // 4. Withdraw from account.
-  // 5. Update pending preferred withdrawls.
-  // 6. Release common lock.
+  // 5. If non-zero balance, then signal it.
+  // 6. Update pending preferred withdrawls.
+  // 7. Release common lock.
   public void withdraw(int k, boolean pref)
   throws InterruptedException {
     lock.lock();           // 1
@@ -62,8 +63,9 @@ class SavingsAccount {
     while (balance<k) await(pref); // 3
     balance -= k;                  // 4
     
-    if (pref) preferred--; // 5
-    lock.unlock();         // 6
+    if (balance>0) signal(); // 5
+    if (pref) preferred--;   // 6
+    lock.unlock();           // 7
   }
 
 

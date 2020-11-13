@@ -19,6 +19,7 @@ class Main {
 
   // Setup N accounts with random balance.
   static void setupAccounts(int kmax) {
+    accounts = new SavingsAccount[N];
     for (int i=0; i<N; i++) {
       int k = (int) (kmax * Math.random());
       accounts[i] = new SavingsAccount();
