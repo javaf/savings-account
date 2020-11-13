@@ -1,92 +1,67 @@
-import java.util.concurrent.locks.*;
-import java.util.concurrent.atomic.*;
-
-
 class Main {
-  static BathroomLock lock;
-  static AtomicInteger males, females, clashes;
-  static int ML = 100, FM = 100;
-  static int CS = 2;
-  // males: number of males in bathroom
-  // females: number of females in bathroom
-  // clashes: times males & females were together
-  // ML: number of males
-  // FM: number of females
-  // CS: checks per person (thread)
+  static SavingsAccount[] accounts;
+  static int N = 10;
+  // accounts: savings accounts
+  // N: number of accounts
 
-
-  static Thread male(int id, boolean safe) {
+  static Thread person(int id) {
     return new Thread(() -> {
-      if (safe) lock.genderLock(0).lock();
-      males.incrementAndGet();
-
-      for (int i=0; i<CS; i++) {
-        sleep(1);
-        int f = females.get();
-        if (f == 0) continue;
-        clashes.incrementAndGet();
-        log("M"+id+": saw "+f+" females");
-      }
-      
-      males.decrementAndGet();
-      if (safe) lock.genderLock(0).unlock();
-    });
+      try {
+      int f = (int) (N * Math.random());
+      SavingsAccount mine = accounts[id];
+      SavingsAccount from = accounts[f];
+      log(id+": ["+mine.balance+"] 100 from "+f);
+      mine.transfer(100, from, false);
+      log(id+": ["+mine.balance+"] done");
+      } catch (InterruptedException e) {}
+    });    
   }
 
-
-  static Thread female(int id, boolean safe) {
-    return new Thread(() -> {
-      if (safe) lock.genderLock(1).lock();
-      females.incrementAndGet();
-      
-      for (int i=0; i<CS; i++) {
-        sleep(1);
-        int m = males.get();
-        if (m == 0) continue;
-        clashes.incrementAndGet();
-        log("F"+id+": saw "+m+" males");
-      }
-      
-      females.decrementAndGet();
-      if (safe) lock.genderLock(1).unlock();
-    });
+  // Setup N accounts with random balance.
+  static void setupAccounts(int kmax) {
+    for (int i=0; i<N; i++) {
+      int k = (int) (kmax * Math.random());
+      accounts[i] = new SavingsAccount();
+      accounts[i].deposit(k);
+    }
   }
 
-
-  // Tests to see if males and females entered
-  // bathroom separately.
-  static void testThreads(boolean safe) {
-    String type = safe? "safe" : "unsafe";
-    log("Starting "+ML+" "+type+" males ...");
-    log("Starting "+FM+" "+type+" females ...");
-
-    males.set(0);
-    females.set(0);
-    clashes.set(0);
-
-    Thread[] t = new Thread[ML+FM];
-    for (int i=0; i<ML+FM; i++) {
-      t[i] = i<ML? male(i, safe) : female(i, safe);
+  // Start all transfers (by person).
+  static Thread[] startTransfers() {
+    Thread[] t = new Thread[N];
+    for (int i=0; i<N; i++)
+      t[i] = person(i);
+    for (int i=0; i<N; i++)
       t[i].start();
-    }
+    return t;
+  }
 
+  // Deposit amount to all accounts.
+  static void depositAll(int k) {
+    for (int i=0; i<N; i++)
+      accounts[i].deposit(k);
+  }
+
+  // Wait for all transfers to complete.
+  static void awaitTransfers(Thread[] t) {
     try {
-    for (int i=0; i<ML+FM; i++)
+    for (int i=0; i<t.length; i++)
       t[i].join();
-    }
-    catch(InterruptedException e) {}
-    log("Clashes occurred: "+clashes.get()+"\n");
+    } catch (InterruptedException e) {}
   }
 
 
   public static void main(String[] args) {
-    lock = new BathroomLock(2);
-    males = new AtomicInteger(0);
-    females = new AtomicInteger(0);
-    clashes = new AtomicInteger(0);
+    log("Setting up accounts ...");
+    setupAccounts(200);
     
-    testThreads(false);
-    testThreads(true);
+    log("\nStarting transfers ...");
+    Thread[] t = startTransfers();
+    sleep(1000);
+
+    log("\nBoss donates 1000 to all");
+    depositAll(1000);
+    awaitTransfers(t);
   }
 
 

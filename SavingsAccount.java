@@ -32,6 +32,7 @@ class SavingsAccount {
     hasNormal = lock.newCondition();
     hasPreferred = lock.newCondition();
     balance = 0;
+    preferred = 0;
   }
 
 
@@ -40,10 +41,10 @@ class SavingsAccount {
   // 3. Signal that account has currency.
   // 4. Release common lock.
   public void deposit(int k) {
-    lock.lock();
-    balance += k;
-    signal();
-    lock.unlock();
+    lock.lock();   // 1
+    balance += k;  // 2
+    signal();      // 3
+    lock.unlock(); // 4
   }
 
 
@@ -63,6 +64,16 @@ class SavingsAccount {
     
     if (pref) preferred--; // 5
     lock.unlock();         // 6
+  }
+
+
+  // 1. Withdraw from source account.
+  // 2. Deposit to this account.
+  public void transfer(int k,
+  SavingsAccount from, boolean pref)
+  throws InterruptedException {
+    from.withdraw(k, pref); // 1
+    deposit(k);             // 2
   }
 
 
