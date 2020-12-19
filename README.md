@@ -8,9 +8,14 @@ has the necessary balance.
 source account has the necessary balance.
 Preferred withdrawls are performed, if waiting.
 
-> Note: Using 2 separate conditions avoids unnecessary
-> waking up of non-preferred withdrawls when preferred
-> withdrals are present.
+Using 2 separate conditions avoids unnecessary
+waking up of non-preferred withdrawls when preferred
+withdrals are present.
+
+> **Course**: [Concurrent Data Structures], Monsoon 2020\
+> **Taught by**: Prof. Govindarajulu Regeti
+
+[Concurrent Data Structures]: https://github.com/iiithf/concurrent-data-structures
 
 ```java
 deposit(k):
